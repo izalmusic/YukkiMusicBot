@@ -212,6 +212,65 @@ async def play(_, message: Message):
             disable_web_page_preview=True
         )
       
+@app.on_callback_query(filters.regex(pattern=r"MusicStream"))
+async def Music_Stream(_, CallbackQuery):
+    if CallbackQuery.message.chat.id not in db_mem:
+        db_mem[CallbackQuery.message.chat.id] = {}
+    try:
+        read1 = db_mem[CallbackQuery.message.chat.id]["live_check"]
+        if read1:
+            return await CallbackQuery.answer(
+                "Live Streaming Playing...Stop it to play music",
+                show_alert=True,
+            )
+        else:
+            pass
+    except:
+        pass
+    callback_data = CallbackQuery.data.strip()
+    callback_request = callback_data.split(None, 1)[1]
+    chat_id = CallbackQuery.message.chat.id
+    chat_title = CallbackQuery.message.chat.title
+    videoid, duration, user_id = callback_request.split("|")
+    if str(duration) == "None":
+        buttons = livestream_markup("720", videoid, duration, user_id)
+        return await CallbackQuery.edit_message_text(
+            "**Live Stream Detected**\n\nWant to play live stream? This will stop the current playing musics(if any) and will start streaming live video.",
+            reply_markup=InlineKeyboardMarkup(buttons),
+        )
+    if CallbackQuery.from_user.id != int(user_id):
+        return await CallbackQuery.answer(
+            "This is not for you! Search You Own Song.", show_alert=True
+        )
+    await CallbackQuery.message.delete()
+    title, duration_min, duration_sec, thumbnail = get_yt_info_id(videoid)
+    if duration_sec > DURATION_LIMIT:
+        return await CallbackQuery.message.reply_text(
+            f"**Duration Limit Exceeded**\n\n**Allowed Duration: **{DURATION_LIMIT_MIN} minute(s)\n**Received Duration:** {duration_min} minute(s)"
+        )
+    await CallbackQuery.answer(f"Processing:- {title[:20]}", show_alert=True)
+    mystic = await CallbackQuery.message.reply_text(
+        f"**{MUSIC_BOT_NAME} Downloader**\n\n**Title:** {title[:50]}\n\n0% ▓▓▓▓▓▓▓▓▓▓▓▓ 100%"
+    )
+    downloaded_file = await loop.run_in_executor(
+        None, download, videoid, mystic, title
+    )
+    raw_path = await convert(downloaded_file)
+    theme = await check_theme(chat_id)
+    chat_title = await specialfont_to_normal(chat_title)
+    thumb = await gen_thumb(thumbnail, title, user_id, theme, chat_title)
+    if chat_id not in db_mem:
+        db_mem[chat_id] = {}
+    await start_stream(
+        CallbackQuery,
+        raw_path,
+        videoid,
+        thumb,
+        title,
+        duration_min,
+        duration_sec,
+        mystic,
+    )
 
 @app.on_callback_query(filters.regex(pattern=r"Yukki"))
 async def startyuplay(_, CallbackQuery):
@@ -339,6 +398,66 @@ async def popat(_, CallbackQuery):
             disable_web_page_preview = True
         )
         return
+      
+      
+@app.on_callback_query(filters.regex(pattern=r"slider"))
+async def slider_query_results(_, CallbackQuery):
+    callback_data = CallbackQuery.data.strip()
+    callback_request = callback_data.split(None, 1)[1]
+    what, type, query, user_id = callback_request.split("|")
+    if CallbackQuery.from_user.id != int(user_id):
+        return await CallbackQuery.answer(
+            "Search Your Own Music. You're not allowed to use this button.",
+            show_alert=True,
+        )
+    what = str(what)
+    type = int(type)
+    if what == "F":
+        if type == 9:
+            query_type = 0
+        else:
+            query_type = int(type + 1)
+        await CallbackQuery.answer("Getting Next Result", show_alert=True)
+        (
+            title,
+            duration_min,
+            duration_sec,
+            thumb,
+            videoid,
+        ) = get_yt_info_query_slider(query, query_type)
+        buttons = url_markup(
+            videoid, duration_min, user_id, query, query_type
+        )
+        med = InputMediaPhoto(
+            media=thumb,
+            caption=f"📎Title: **{title}\n\n⏳Duration:** {duration_min} Mins\n\n__[Get Additional Information About Video](https://t.me/{BOT_USERNAME}?start=info_{videoid})__",
+        )
+        return await CallbackQuery.edit_message_media(
+            media=med, reply_markup=InlineKeyboardMarkup(buttons)
+        )
+    if what == "B":
+        if type == 0:
+            query_type = 9
+        else:
+            query_type = int(type - 1)
+        await CallbackQuery.answer("Getting Previous Result", show_alert=True)
+        (
+            title,
+            duration_min,
+            duration_sec,
+            thumb,
+            videoid,
+        ) = get_yt_info_query_slider(query, query_type)
+        buttons = url_markup(
+            videoid, duration_min, user_id, query, query_type
+        )
+        med = InputMediaPhoto(
+            media=thumb,
+            caption=f"📎Title: **{title}\n\n⏳Duration:** {duration_min} Mins\n\n__[Get Additional Information About Video](https://t.me/{BOT_USERNAME}?start=info_{videoid})__",
+        )
+        return await CallbackQuery.edit_message_media(
+            media=med, reply_markup=InlineKeyboardMarkup(buttons)
+        )
         
         
         
