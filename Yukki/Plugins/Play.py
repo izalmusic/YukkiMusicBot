@@ -1,6 +1,8 @@
 import asyncio
 from os import path
 
+from Yukki.Core.Logger.logs import LOG_CHAT
+
 from pyrogram import filters
 from pyrogram.types import (InlineKeyboardMarkup, InputMediaPhoto, Message,
                             Voice)
@@ -174,7 +176,7 @@ async def play(_, message: Message):
             )
             return
         what = "Query Given"
-        await logging(message, what)
+        await LOG_CHAT(message, what)
         mystic = await message.reply_text("🔍 **Searching**...")
         query = message.text.split(None, 1)[1]
         user_id = message.from_user.id
