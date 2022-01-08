@@ -105,6 +105,12 @@ def search_markup(
                 text=">", callback_data=f"popat 1|{query}|{user_id}"
             ),
         ],
+        [
+            InlineKeyboardButton(
+                text="🎥 Play Video",
+                callback_data=f"Choose {videoid}|{duration}|{user_id}",
+            ),
+        ],
     ]
     return buttons
 
@@ -157,6 +163,12 @@ def search_markup2(
             ),
             InlineKeyboardButton(
                 text=">", callback_data=f"popat 2|{query}|{user_id}"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="🎥 Play Video",
+                callback_data=f"Choose {videoid}|{duration}|{user_id}",
             ),
         ],
     ]
