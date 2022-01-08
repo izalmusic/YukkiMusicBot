@@ -2,6 +2,7 @@ import asyncio
 from os import path
 
 from pyrogram import filters
+from Yukki.Core.Logger.logs import LOG_CHAT
 from pyrogram.types import (InlineKeyboardMarkup, InputMediaPhoto, Message,
                             Voice)
 from youtube_search import YoutubeSearch
